@@ -1,0 +1,73 @@
+/*
+ * Licensed to Elasticsearch under one or more contributor
+ * license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright
+ * ownership. Elasticsearch licenses this file to you under
+ * the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+buildscript {
+    ext {
+        pluginVersion = '1.0.0'
+        esVersion = '5.1.1'
+    }
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'org.elasticsearch.gradle:build-tools:' + esVersion
+    }
+}
+
+group = 'org.elasticsearch.plugin'
+version = 'v' + pluginVersion + '_es' + esVersion
+
+apply plugin: 'java'
+apply plugin: 'elasticsearch.esplugin'
+apply plugin: 'idea'
+
+
+esplugin {
+  name 'dictag'
+  description 'Demonstrates all the pluggable Java entry points in Elasticsearch'
+  classname 'org.elasticsearch.plugin.analysis.dictag.AnalysisDictionaryTagPlugin'
+}
+
+dependencies {
+    // test
+    testCompile('org.assertj:assertj-core:3.5.2')
+}
+
+// no unit tests
+test.enabled = false
+
+// Set to false to not use elasticsearch checkstyle rules
+checkstyleMain.enabled = false
+checkstyleTest.enabled = false
+
+// FIXME dependency license check needs to be enabled
+dependencyLicenses.enabled = true
+
+// FIXME thirdparty audit needs to be enabled
+thirdPartyAudit.enabled = false
+
+// Uncomment this to skip license header checks
+licenseHeaders.enabled = false
+namingConventions.enabled = false
+forbiddenApisMain.enabled = false
+forbiddenApisTest.enabled = false
+integTest.enabled = false

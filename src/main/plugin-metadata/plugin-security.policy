@@ -1,0 +1,3 @@
+grant codeBase "file:plugins/dictag/*" {
+  permission java.lang.FilePermission "plugins/-" "read";
+};

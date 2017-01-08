@@ -17,23 +17,23 @@ package org.elasticsearch.index.analysis;
  */
 
 import org.apache.lucene.analysis.Analyzer;
-import org.elasticsearch.common.settings.Settings;
 
 
-public final class STConvertAnalyzer extends Analyzer {
+public final class DictionaryTagAnalyzer extends Analyzer {
 
-    private String delimiter;
-    private STConvertType convertType;
-    private Boolean keepBoth=false;
-    public STConvertAnalyzer(STConvertType type,String delimiter,boolean keepBoth) {
-        this.convertType=type;
-        this.delimiter=delimiter;
-        this.keepBoth=keepBoth;
+    private final DictionaryTagType tagType;
+    private final String path;
+    private final String url;
+
+    public DictionaryTagAnalyzer(DictionaryTagType type, String path, String url) {
+        this.tagType = type;
+        this.path = path;
+        this.url = url;
     }
 
     @Override
     protected TokenStreamComponents createComponents(String fieldName) {
-        return  new TokenStreamComponents(new STConvertTokenizer(convertType, delimiter,keepBoth));
+        return  new TokenStreamComponents(new DictionaryTagTokenizer(tagType, path, url));
     }
 
 }

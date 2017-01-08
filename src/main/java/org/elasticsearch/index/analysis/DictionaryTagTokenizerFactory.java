@@ -22,30 +22,26 @@ import org.elasticsearch.index.IndexSettings;
  * limitations under the License.
  */
 
-public class STConvertTokenizerFactory extends AbstractTokenizerFactory {
+public class DictionaryTagTokenizerFactory extends AbstractTokenizerFactory {
 
-   private String type="t2s";
-   private String delimiter=",";
-    private Boolean keepBoth=false;
+    private final String typeString;
+    private final String path;
+    private final String url;
+    private final DictionaryTagType tagType;
 
-    public STConvertTokenizerFactory(IndexSettings indexSettings, Environment env, String name, Settings settings) {
+    public DictionaryTagTokenizerFactory(IndexSettings indexSettings, Environment env, String name, Settings settings) {
         super(indexSettings, name, settings);
-         type = settings.get("convert_type", "s2t");
-         delimiter = settings.get("delimiter", ",");
-         String keepBothStr = settings.get("keep_both", "false");
-        if(keepBothStr.equals("true")) {
-             keepBoth = true;
-        }
+
+        typeString = settings.get("tag_type", "");
+        path = settings.get("file_path", "");
+        url = settings.get("file_url", "");
+
+        tagType = DictionaryTagType.getTagType(typeString);
     }
 
     @Override
     public Tokenizer create() {
-        STConvertType convertType= STConvertType.SIMPLE_2_TRADITIONAL;
-        if(type.equals("t2s")){
-            convertType = STConvertType.TRADITIONAL_2_SIMPLE;
-        }
-
-        return new STConvertTokenizer(convertType, delimiter,keepBoth);
+        return new DictionaryTagTokenizer(tagType, path, url);
     }
 }
 

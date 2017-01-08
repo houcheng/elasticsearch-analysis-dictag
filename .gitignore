@@ -10,3 +10,5 @@
 /.classpath
 /*.ipr
 /*.iws
+.gradle
+build

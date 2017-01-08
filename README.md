@@ -1,135 +1,127 @@
-STConvert Analysis for Elasticsearch
-==================================
+Dictionary Tag plugin for Elasticsearch
+=======================================
 
-STConvert is analyzer that convert Chinese characters between Traditional and Simplified.
-[中文简繁體转换][简体到繁体][繁体到简体][简繁查询Expand]
+Dictionary Tag is an elasticsearch analyzer for generating dictionary's version information as
+field for indexing. With the dictionary version information on each record(document) the administrator
+can determine whether to re-index each record based on dictionary's version.
 
-You can download from here: https://github.com/medcl/elasticsearch-analysis-stconvert/releases
+Currently, the plugin only supports elasticsearch version 5.1.1.
 
-    --------------------------------------------------
-    | STConvert  Analysis Plugin   | Elasticsearch    |
-    --------------------------------------------------
-    | 5.1.1                        | 5.1.1            |
-    --------------------------------------------------
-    | 1.9.1                        | 2.4.1            |
-    --------------------------------------------------
-    | 1.8.5                        | 2.3.5            |
-    --------------------------------------------------
-    | 1.8.4                        | 2.3.4            |
-    --------------------------------------------------
-    | 1.8.3                        | 2.3.3            |
-    --------------------------------------------------
-    | 1.7.1                        | 2.2.1            |
-    --------------------------------------------------
-    | 1.6.0                        | 2.1.0  -> 2.1.x  |
-    --------------------------------------------------      
-    | 1.5.0                        | 2.0.0  -> 2.0.x  |
-    --------------------------------------------------    
-    | 1.4.0                        | 1.0.0  -> 1.7.x  |
-    --------------------------------------------------
-    | 1.2.0                        | 0.90.0 -> 0.90.2 |
-    --------------------------------------------------
-    | 1.1.0                        | 0.19.0 -> 0.20.x |
-    --------------------------------------------------
+    ----------------------------------------------------
+    | Dictionary Tag Analysis Plugin| Elasticsearch    |
+    ----------------------------------------------------
+    | 1.0.0                         | 5.1.1            |
+    ----------------------------------------------------
 
-The plugin includes  analyzer: `stconvert`,
- tokenizer: `stconvert`,
- token-filter:  `stconvert`,
- and char-filter: `stconvert`
+The plugin includes the analyzer: `dictag` and tokenizer: `dictag`,
 
-Config:
+Configuration of the analyzer or tokenizer:
 
-1.`delimiter`:default `,`
+- tag_type: "size", "line_no", "date". The default is "date"
+- file_path: path to the dictionary file.
 
-2.`keep_both`:default `false` ,
+### Test filter
 
-3.`convert_type`: default `s2t`
-,optional option:
-
-1. `s2t` ,convert characters from Simple Chinese to Traditional Chinese
-2. `t2s` ,convert characters from Traditional Chinese to Simple Chinese
-
-
-Custom:
+Create the test index
 
 ```
-PUT /stconvert/
+curl -XPUT http://localhost:9200/my_index
+```
+
+
+Create the mapping and analyzer in my_index
+
+```
+PUT /my_index
 {
-    "index" : {
-        "analysis" : {
-            "analyzer" : {
-                "tsconvert" : {
-                    "tokenizer" : "tsconvert"
-                    }
-            },
-            "tokenizer" : {
-                "tsconvert" : {
-                    "type" : "stconvert",
-                    "delimiter" : "#",
-                    "keep_both" : false,
-                    "convert_type" : "t2s"
-                }
-            },
-            "char_filter" : {
-                "tsconvert" : {
-                    "type" : "stconvert",
-                    "delimiter" : "#",
-                    "keep_both" : false,
-                    "convert_type" : "t2s"
-                }
-            }
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "my_analyzer": {
+          "type": "dictag",
+          "tag_type": "date",
+          "file_path": "plugins/dictag/plugin-descriptor.properties"
         }
+      }
     }
+  }
 }
-```
 
-
-Analyze tests
-
-```
-  curl -XGET http://localhost:9200/index/_analyze\?text\=%e5%8c%97%e4%ba%ac%e5%9b%bd%e9%99%85%e7%94%b5%e8%a7%86%e5%8f%b0%2c%e5%8c%97%e4%ba%ac%e5%9c%8b%e9%9a%9b%e9%9b%bb%e8%a6%96%e8%87%ba\&tokenizer\=stconvert
-{"tokens":[{"token":"北京國際電視檯","start_offset":0,"end_offset":7,"type":"word","position":0},{"token":"北京國際電視臺","start_offset":8,"end_offset":15,"type":"word","position":2}]}%                                                      
-
-➜  ~  curl -XGET http://localhost:9200/index/_analyze\?text\=%e5%8c%97%e4%ba%ac%e5%9b%bd%e9%99%85%e7%94%b5%e8%a7%86%e5%8f%b0%2c%e5%8c%97%e4%ba%ac%e5%9c%8b%e9%9a%9b%e9%9b%bb%e8%a6%96%e8%87%ba\&tokenizer\=tsconvert
-{"tokens":[{"token":"北京国际电视台","start_offset":0,"end_offset":7,"type":"word","position":0},{"token":"北京国际电视台","start_offset":8,"end_offset":15,"type":"word","position":2}]}%                                                      
-
-➜  ~  curl -XGET http://localhost:9200/index/_analyze\?text\=%e5%8c%97%e4%ba%ac%e5%9b%bd%e9%99%85%e7%94%b5%e8%a7%86%e5%8f%b0%2c%e5%8c%97%e4%ba%ac%e5%9c%8b%e9%9a%9b%e9%9b%bb%e8%a6%96%e8%87%ba\&tokenizer\=tsconvert_keep_both
-{"tokens":[{"token":"北京国际电视台,北京国际电视台","start_offset":0,"end_offset":7,"type":"word","position":0},{"token":"北京国际电视台,北京國際電視臺","start_offset":8,"end_offset":15,"type":"word","position":2}]}%                        
-
-➜  ~  curl -XGET http://localhost:9200/index/_analyze\?text\=%e5%8c%97%e4%ba%ac%e5%9b%bd%e9%99%85%e7%94%b5%e8%a7%86%e5%8f%b0%2c%e5%8c%97%e4%ba%ac%e5%9c%8b%e9%9a%9b%e9%9b%bb%e8%a6%96%e8%87%ba\&tokenizer\=stconvert_keep_both
-{"tokens":[{"token":"北京國際電視檯,北京国际电视台","start_offset":0,"end_offset":7,"type":"word","position":0},{"token":"北京國際電視臺,北京國際電視臺","start_offset":8,"end_offset":15,"type":"word","position":2}]}%                        
-
-➜  ~  curl -XGET http://localhost:9200/index/_analyze\?text\=%e5%8c%97%e4%ba%ac%e5%9b%bd%e9%99%85%e7%94%b5%e8%a7%86%e5%8f%b0%2c%e5%8c%97%e4%ba%ac%e5%9c%8b%e9%9a%9b%e9%9b%bb%e8%a6%96%e8%87%ba\&analyzer\=stconvert_keep_both
-{"tokens":[{"token":"北京國際電視檯,北京国际电视台","start_offset":0,"end_offset":7,"type":"word","position":0},{"token":"北京國際電視臺,北京國際電視臺","start_offset":8,"end_offset":15,"type":"word","position":102}]}%                      
-
-➜  ~  curl -XGET http://localhost:9200/index/_analyze\?text\=%e5%8c%97%e4%ba%ac%e5%9b%bd%e9%99%85%e7%94%b5%e8%a7%86%e5%8f%b0%2c%e5%8c%97%e4%ba%ac%e5%9c%8b%e9%9a%9b%e9%9b%bb%e8%a6%96%e8%87%ba\&analyzer\=tsconvert_keep_both
-{"tokens":[{"token":"北京国际电视台,北京国际电视台","start_offset":0,"end_offset":7,"type":"word","position":0},{"token":"北京国际电视台,北京國際電視臺","start_offset":8,"end_offset":15,"type":"word","position":102}]}%                      
-
-➜  ~  curl -XGET http://localhost:9200/index/_analyze\?text\=%e5%8c%97%e4%ba%ac%e5%9b%bd%e9%99%85%e7%94%b5%e8%a7%86%e5%8f%b0%2c%e5%8c%97%e4%ba%ac%e5%9c%8b%e9%9a%9b%e9%9b%bb%e8%a6%96%e8%87%ba\&analyzer\=tsconvert         
-{"tokens":[{"token":"北京国际电视台","start_offset":0,"end_offset":7,"type":"word","position":0},{"token":"北京国际电视台","start_offset":8,"end_offset":15,"type":"word","position":102}]}%                                                    
-
-➜  ~  curl -XGET http://localhost:9200/index/_analyze\?text\=%e5%8c%97%e4%ba%ac%e5%9b%bd%e9%99%85%e7%94%b5%e8%a7%86%e5%8f%b0%2c%e5%8c%97%e4%ba%ac%e5%9c%8b%e9%9a%9b%e9%9b%bb%e8%a6%96%e8%87%ba\&analyzer\=stconvert
-{"tokens":[{"token":"北京國際電視檯","start_offset":0,"end_offset":7,"type":"word","position":0},{"token":"北京國際電視臺","start_offset":8,"end_offset":15,"type":"word","position":102}]}%                                                    
-
-```
-
-```
-GET stconvert/_analyze
+POST /my_index/document/_mapping
 {
-  "tokenizer" : "keyword",
-  "filter" : ["lowercase"],
-  "char_filter" : ["tsconvert"],
-  "text" : "国际國際"
+   "document": {
+      "properties": {
+         "title": {
+            "type": "text",
+            "store": true,
+            "fields": {
+               "dictag": {
+                  "type": "text",
+                  "analyzer": "my_analyzer",
+               }
+            }
+         }
+      }
+   }
 }
+
+```
+
+
+Analyzer test, it returns the file date as expected:
+
+```
+curl -XGET 'localhost:9200/my_index/_analyze?analyzer=my_analyzer' -d 'Dictionary tag test'.
+
+It returned:
+{"tokens":[{"token":"1483899356000","start_offset":0,"end_offset":13,"type":"word","position":0}]}%
+```
+
+### Scenario of finding documents analyzed with old dictionary
+
+Add documents and update dictionary's date:
+
+```
+PUT 'localhost:9200/my_index/document/1' -d '
 {
-  "tokens": [
-    {
-      "token": "国际国际",
-      "start_offset": 0,
-      "end_offset": 4,
-      "type": "word",
-      "position": 0
-    }
-  ]
+  "title": "Title 1"
+}'
+
+touch plugins/dictag/plugin-descriptor.properties
+
+curl -XPUT 'localhost:9200/my_index/document/2' -d '
+{
+  "title": "Title 2 uses newer dictionary"
+}'
+```
+
+Call the analyzer to get the latest dictionary's tag information:
+
+```
+curl -XGET 'localhost:9200/my_index/_analyze?analyzer=my_analyzer' -d 'Dictionary tag test'
+
+It returned:
+{"tokens":[{"token":"1483900769000","start_offset":0,"end_offset":13,"type":"word","position":0}]}
+```
+
+Based on dictionary tag, find documents that parsed by older dictionary:
+
+```
+POST /my_index/document/_search
+{
+   "query": {
+      "bool": {
+         "must_not": [
+            {
+               "term": {
+                  "title.dictag": "1483900769000"
+               }
+            }
+         ]
+      }
+   }
 }
 ```
+
+
+

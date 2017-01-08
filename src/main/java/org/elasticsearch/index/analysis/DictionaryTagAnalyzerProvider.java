@@ -20,30 +20,23 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
 
-public class STConvertAnalyzerProvider extends AbstractIndexAnalyzerProvider<STConvertAnalyzer> {
+public class DictionaryTagAnalyzerProvider extends AbstractIndexAnalyzerProvider<DictionaryTagAnalyzer> {
 
-    private final STConvertAnalyzer analyzer;
+    private final DictionaryTagAnalyzer analyzer;
 
-    public STConvertAnalyzerProvider(IndexSettings indexSettings, Environment env, String name, Settings settings) {
+    public DictionaryTagAnalyzerProvider(IndexSettings indexSettings, Environment env, String name, Settings settings) {
         super(indexSettings, name, settings);
-        Boolean keepBoth = false;
-        String type = settings.get("convert_type", "s2t");
-        String delimiter = settings.get("delimiter", ",");
-        String keepBothStr = settings.get("keep_both", "false");
-        if (keepBothStr.equals("true")) {
-            keepBoth = true;
-        }
 
-        STConvertType convertType = STConvertType.SIMPLE_2_TRADITIONAL;
-        if (type.equals("t2s")) {
-            convertType = STConvertType.TRADITIONAL_2_SIMPLE;
-        }
+        String typeString = settings.get("tag_type", "");
+        String path = settings.get("file_path", "");
+        String url = settings.get("file_url", "");
 
-        analyzer = new STConvertAnalyzer(convertType, delimiter, keepBoth);
+        DictionaryTagType type = DictionaryTagType.getTagType(typeString);
+        analyzer = new DictionaryTagAnalyzer(type, path, url);
     }
 
     @Override
-    public STConvertAnalyzer get() {
+    public DictionaryTagAnalyzer get() {
         return this.analyzer;
     }
 }
